@@ -4,7 +4,7 @@ import { v2 as cloudinary } from 'cloudinary'
 import Post from "@/models/post";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== 'POST' && req.method !== 'GET') {
+    if (req.method !== 'POST' && req.method !== 'GET' && req.method !== 'DELETE') {
         return res.status(405).end()
     }
 
@@ -18,8 +18,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (req.method === 'POST') {
             connectDB()
 
-            const {  name, postedAt, details, email, Price } = req.body
-            
+            const {image, name, postedAt, details, email, Price } = req.body
+
 
             const options = {
                 use_filename: true,
@@ -28,10 +28,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 transformation: [{ width: 1000, height: 752, crop: "scale" }],
             };
 
-            //const PhotoUrl = await cloudinary.uploader.upload(image, options)
+            const PhotoUrl = await cloudinary.uploader.upload(image, options)
 
             const posts = await Post.create({
-                //image: PhotoUrl.url,
+                image: PhotoUrl.url,
                 name,
                 postedAt,
                 details,
@@ -47,6 +47,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const posts = await Post.find()
 
             return res.status(201).json(posts)
+        }
+
+        if (req.method === 'DELETE') {
+            const { query: { id } } = req;
+
+            const deletedPost = await Post.findByIdAndRemove();
+
+            return res.status(201).json(deletedPost)
+
         }
     } catch (error) {
         console.log(error)

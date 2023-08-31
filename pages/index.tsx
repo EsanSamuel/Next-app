@@ -1,105 +1,50 @@
-import Button from '@/components/Button'
-import React, { ChangeEvent, useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
-import Image from 'next/image'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import Image from 'next/image'
+import Link from 'next/link'
+import Card from '@/components/Card'
+import Sidebar from '@/components/Sidebar'
+import { useSession } from 'next-auth/react'
 
-const index = () => {
+const page = () => {
   const { data: session } = useSession()
-  const [image, setImage] = useState('')
-  const [email, setEmail] = useState('s')
-  const [name, setName] = useState('s')
-  const [details, setDetails] = useState('')
-  const [Price, setPrice] = useState('')
-  const [postedAt, setPostedAt] = useState('now')
-  const [isLoading, setIsLoading] = useState(false)
   const [data, setData] = useState<any>([])
-
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault()
-
-    const file = e.target.files?.[0]
-
-    if (!file) return
-
-    if (!file.type.includes('image')) {
-      alert('Please upload an image')
-
-      return
-    }
-
-    const reader = new FileReader()
-
-    reader.readAsDataURL(file)
-
-    reader.onload = () => {
-      const result = reader.result as string
-
-      setImage('image')
-    }
-  }
-
-  const submit = async () => {
-    setIsLoading(true)
-
-    try {
-      const response = await axios.post('/api/post', { name, email, details, Price, postedAt })
-      console.log(response)
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const getData = async () => {
     const response = await axios.get('/api/post')
 
     console.log(response)
-    setData(response.data)
-
+    setData(response.data.reverse())
   }
 
   useEffect(() => {
     getData()
   }, [])
 
-
-
   return (
-    <div className='p-5'>
-      <Button />
+    <div className='sm:p-10 p-5 bg-[#13131a] flex gap-3'>
 
+      <div>
+        <div className='sm:flex hidden absolute'>
+          <Sidebar />
+        </div>
 
-{data.map((datas: Record<string, any>) => (
-          <div key={datas.id}>
-            kk{datas.details}
+        <div className='sm:px-20 '>
+          <div>
+            <h1 className='text-white sm:text-[25px] text-[20px]'>Hello, {session?.user?.name}.</h1>
           </div>
-        ))}
 
-      <div className='w-full'>
-        <input type='file' onChange={handleImageChange} />
-        <div className='p-20 h-auto'>
-          {image && <Image src={image} alt='image' width={400} height={400} />}
+
+          <div className='grid grid-cols-1 gap-4 sm:grid-cols-4  mt-10 w-full'>
+            {data.map((datas: Record<string, any>) => (
+              <div className='data w-full'>
+                <Card key={datas.id} {...datas} />
+              </div>
+            ))}
+          </div>
         </div>
-
-        <div className='px-20 space-y-5'>
-          <input className='w-full h-[40px] border border-[#5f5f5f] p-3 pb-5 rounded' placeholder='Enter Hostel details'
-            onChange={(e) => setDetails(e.target.value)}
-            value={details} />
-          <input className='w-full h-[40px] border border-[#5f5f5f] p-3 rounded' placeholder='Enter Hostel details' onChange={(e) => setPrice(e.target.value)}
-            value={Price} />
-
-          {!isLoading && <button onClick={submit}>Post</button>}
-          {isLoading && <button >Posting...</button>}
-        </div>
-
-        
-
       </div>
     </div>
   )
 }
 
-export default index
+export default page
